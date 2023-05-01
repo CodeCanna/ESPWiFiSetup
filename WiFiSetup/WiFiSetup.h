@@ -9,6 +9,7 @@ DOC STRING
 
 
 // Try partitioning our memory blocks
+/*
 struct {
   int networkSSIDBegin = 50;
   int networkSSIDEnd = 100;
@@ -19,6 +20,7 @@ struct {
   int isFirstTimeSetupAddr = 420;
   const int EEPROM_SIZE = 512;
 } MEM;
+*/
 
 struct NetworkConfig
 {
@@ -35,13 +37,13 @@ class WiFiSetup
         int getPort();
         void handleClient();
         void handleConnect();
-        void handleSetup();
         void handleInfo();
         void handleApp();
         void showConnectionPortal();
         void showHomePage();
         void setNetworkConfig(String ssid, String pass);
         void softAPBegin();
+        void setAppPage(String pageHTML);
         NetworkConfig getNetworkConfig();
         ESP8266WebServer server = {80};
         
@@ -49,6 +51,7 @@ class WiFiSetup
         int _port;
         String _ssidAP;
         String _passAP;
+        String _appPage;
         NetworkConfig networkConfig;  
 };
 #endif

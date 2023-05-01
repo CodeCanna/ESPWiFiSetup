@@ -70,8 +70,8 @@ String homePage = R"END(
       <form action="/wifi-info">
         <button type="submit" id="show-info">Show WiFi Info</button>
       </form>
-      <form action="/setup">
-        <button type="submit" id="to-setup">Back to Setup </button>
+      <form action="/connect_page">
+        <button type="submit" id="to-setup">To Setup </button>
       </form>
     </div>
   </body>
