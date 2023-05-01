@@ -6,22 +6,6 @@ DOC STRING
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 
-
-
-// Try partitioning our memory blocks
-/*
-struct {
-  int networkSSIDBegin = 50;
-  int networkSSIDEnd = 100;
-
-  int networkPassBegin = 101;
-  int networkPassEnd = 200;
-
-  int isFirstTimeSetupAddr = 420;
-  const int EEPROM_SIZE = 512;
-} MEM;
-*/
-
 struct NetworkConfig
 {
   String networkSSID;
@@ -51,7 +35,7 @@ class WiFiSetup
         int _port;
         String _ssidAP;
         String _passAP;
-        String _appPage;
+        String _appPage = "Insert your HTML here.";
         NetworkConfig networkConfig;  
 };
 #endif
