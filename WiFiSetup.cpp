@@ -81,7 +81,9 @@ int WiFiSetup::getPort()
 void WiFiSetup::showConnectionPortal()
 {
     // Scan for networks to insert into our webpage
-    int networksFound = WiFi.scanNetworks();
+    WiFi.scanNetworks();
+    delay(500);
+    int networksFound = WiFi.scanComplete();
     if (networksFound == 0)
     {
         this->server.send(200, "text/html", "No networks found");
@@ -128,12 +130,17 @@ NetworkConfig WiFiSetup::getNetworkConfig()
     return this->networkConfig;
 }
 
+void WiFiSetup::setAppPage(String pageHTML)
+{
+    this->_appPage = pageHTML;
+}
+
 // Handlers
 
 void WiFiSetup::handleApp()
 {
     Serial.println("Start App");
-    this->server.send(200, "text/html", "Show _app string");
+    this->server.send(200, "text/html", this->_appPage);
 }
 
 void WiFiSetup::handleInfo()
