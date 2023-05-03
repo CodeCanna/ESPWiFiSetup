@@ -229,22 +229,33 @@ bool WiFiSetup::saveDeviceConfig()
 
     // Create char arrays for a buffer
     char deviceName_CharArray[deviceName_StrLen];
-    char deviceDescr_CharArray[deviceName_StrLen];
+    char deviceDescr_CharArray[deviceDescr_StrLen];
 
     config.deviceName.toCharArray(deviceName_CharArray, deviceDescr_StrLen);
     config.deviceDescription.toCharArray(deviceDescr_CharArray, deviceDescr_StrLen);
 
     Serial.println("Recieved Device Name: " + config.deviceName);
-    Serial.println("Recieved Device Description: " + config.deviceName);
+    Serial.println("Recieved Device Description: " + config.deviceDescription);
     delay(5000);
 
     EEPROM.begin(300);
 
+    // Clear EEPROP
+    for (int i = 0; i < 300; i++)
+    {
+        EEPROM.write(i, 0);
+    }
+
+    EEPROM.commit();
+
     // Write device name
     for (int i = 0; i < sizeof(deviceName_CharArray) / sizeof(deviceName_CharArray[0]); i++)
     {
+        delay(500);
         EEPROM.write(startAddress_DevName, deviceName_CharArray[i]);
         Serial.print(deviceName_CharArray[i]);
+        Serial.print(" save at ");
+        Serial.println(startAddress_DevName);
         startAddress_DevName++;
     }
 
@@ -252,6 +263,9 @@ bool WiFiSetup::saveDeviceConfig()
     for (int i = 0; i < sizeof(deviceDescr_CharArray) / sizeof(deviceDescr_CharArray[i]); i++)
     {
         EEPROM.write(startAddress_DevDescr, deviceDescr_CharArray[i]);
+        Serial.print(deviceDescr_CharArray[i]);
+        Serial.print(" save at ");
+        Serial.println(startAddress_DevDescr);
         startAddress_DevDescr++;
     }
     EEPROM.commit();
@@ -271,15 +285,17 @@ DeviceConfig WiFiSetup::readDeviceConfig()
     int startAddress_DevName = this->DEV_NAME_ADDRESS_START;
     int startAddress_DevDescr = this->DEV_DESCR_ADDRESS_START;
 
+    EEPROM.begin(300);
     char deviceName_CharCurrent = EEPROM.read(startAddress_DevName);
     char deviceDescr_CharCurrent = EEPROM.read(startAddress_DevDescr);
-
-    EEPROM.begin(300);
 
     // Read deviceName
     while (deviceName_CharCurrent != '\0' && startAddress_DevName < this->DEV_NAME_ADDRESS_MAX)
     {
         deviceName_CharCurrent = EEPROM.read(startAddress_DevName);
+        Serial.print(deviceName_CharCurrent);
+        Serial.print("read at");
+        Serial.println(startAddress_DevName);
         if (deviceName_CharCurrent == '\0') break;
         deviceName_BuffString += deviceName_CharCurrent;
         startAddress_DevName++;
