@@ -289,7 +289,7 @@ String deviceInfoPage = R"END(
         }
 
         h2:nth-child(5) {
-          background-color: gray;
+          background-color: white;
         }
       </style>
     </head>
