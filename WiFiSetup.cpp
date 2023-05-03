@@ -119,20 +119,19 @@ void WiFiSetup::showHomePage()
     this->server.send(200, "text/html", homePage);
 }
 
-void WiFiSetup::setNetworkConfig(String ssid, String pass)
-{
-    this->networkConfig.networkSSID = ssid;
-    this->networkConfig.networkPASS = pass;
-}
-
-NetworkConfig WiFiSetup::getNetworkConfig()
-{
-    return this->networkConfig;
-}
-
 void WiFiSetup::setAppPage(String pageHTML)
 {
     this->_appPage = pageHTML;
+}
+
+void WiFiSetup::setDeviceConfig(DeviceConfig config)
+{
+    this->deviceConfig = config;
+}
+
+DeviceConfig WiFiSetup::getDeviceConfig()
+{
+    return this->deviceConfig;
 }
 
 // Handlers
@@ -145,17 +144,28 @@ void WiFiSetup::handleApp()
 
 void WiFiSetup::handleInfo()
 {
+    DeviceConfig config = this->readDeviceConfig();
     Serial.println("Show WiFi Info");
-    this->server.send(200, "text/html", "WiFi Info ans stuff");
+    Serial.println(config.deviceName);
+    Serial.println(config.deviceDescription);
+    // Replace populate device info
+    deviceInfoPage.replace("^devicename^", config.deviceName);
+    deviceInfoPage.replace("^devicedescr^", config.deviceDescription);
+    deviceInfoPage.replace("^wifissid^", WiFi.SSID());
+    deviceInfoPage.replace("^deviceip^", WiFi.localIP().toString());
+    deviceInfoPage.replace("^networkip^", WiFi.gatewayIP().toString());
+    this->server.send(200, "text/html", String(deviceInfoPage));
 }
 
 void WiFiSetup::handleConnect()
 {
     if (WiFi.SSID() != String(this->server.arg("ssid")) || WiFi.psk() != String(this->server.arg("pass")))
     {
-        //WiFi.disconnect(true);
+        WiFi.disconnect(true);
         Serial.println("SSID: " + String(this->server.arg("ssid")));
         Serial.println("PASS: " + String(this->server.arg("pass")));
+        Serial.println("Device Name: " + String(this->server.arg("device-name")));
+        Serial.println("Device Description: " + String(this->server.arg("device-descr")));
         WiFi.begin(String(this->server.arg("ssid")), String(this->server.arg("pass")));
 
         while (WiFi.status() == WL_DISCONNECTED)
@@ -165,11 +175,16 @@ void WiFiSetup::handleConnect()
             {
                 Serial.println("Connected!");
 
-                this->networkConfig.networkSSID = String(this->server.arg("ssid"));
-                this->networkConfig.networkPASS = String(this->server.arg("pass"));
+                DeviceConfig config;
+
+                config.deviceName = String(this->server.arg("device-name"));
+                config.deviceDescription = String(this->server.arg("device-descr"));
+
+                this->setDeviceConfig(config);
+                this->saveDeviceConfig() ? Serial.println("Device Config Saved!") : Serial.println("Failed to Save Device Config...");
 
                 // Send connection success page
-                successPage.replace("^networkname^", this->networkConfig.networkSSID);
+                successPage.replace("^networkname^", String(this->server.arg("ssid")));
                 this->server.send(200, "text/html", successPage);
                 delay(3000);
                 ESP.restart();
@@ -200,4 +215,93 @@ void WiFiSetup::handleConnect()
 void WiFiSetup::handleClient()
 {
     this->server.handleClient();
+}
+
+// EEPROM Stuff
+
+bool WiFiSetup::saveDeviceConfig()
+{
+    DeviceConfig config = this->getDeviceConfig();
+    int deviceName_StrLen = config.deviceName.length() + 1;
+    int deviceDescr_StrLen = config.deviceDescription.length() + 1;
+    int startAddress_DevName = this->DEV_NAME_ADDRESS_START;
+    int startAddress_DevDescr = this->DEV_DESCR_ADDRESS_START;
+
+    // Create char arrays for a buffer
+    char deviceName_CharArray[deviceName_StrLen];
+    char deviceDescr_CharArray[deviceName_StrLen];
+
+    config.deviceName.toCharArray(deviceName_CharArray, deviceDescr_StrLen);
+    config.deviceDescription.toCharArray(deviceDescr_CharArray, deviceDescr_StrLen);
+
+    Serial.println("Recieved Device Name: " + config.deviceName);
+    Serial.println("Recieved Device Description: " + config.deviceName);
+    delay(5000);
+
+    EEPROM.begin(300);
+
+    // Write device name
+    for (int i = 0; i < sizeof(deviceName_CharArray) / sizeof(deviceName_CharArray[0]); i++)
+    {
+        EEPROM.write(startAddress_DevName, deviceName_CharArray[i]);
+        Serial.print(deviceName_CharArray[i]);
+        startAddress_DevName++;
+    }
+
+    // Write device description
+    for (int i = 0; i < sizeof(deviceDescr_CharArray) / sizeof(deviceDescr_CharArray[i]); i++)
+    {
+        EEPROM.write(startAddress_DevDescr, deviceDescr_CharArray[i]);
+        startAddress_DevDescr++;
+    }
+    EEPROM.commit();
+    if (! EEPROM.end())
+    {
+        return false;
+    }
+    return true;
+}
+
+DeviceConfig WiFiSetup::readDeviceConfig()
+{
+    // Create buffer strings to hold read strings
+    String deviceName_BuffString;
+    String deviceDescript_BuffString;
+
+    int startAddress_DevName = this->DEV_NAME_ADDRESS_START;
+    int startAddress_DevDescr = this->DEV_DESCR_ADDRESS_START;
+
+    char deviceName_CharCurrent = EEPROM.read(startAddress_DevName);
+    char deviceDescr_CharCurrent = EEPROM.read(startAddress_DevDescr);
+
+    EEPROM.begin(300);
+
+    // Read deviceName
+    while (deviceName_CharCurrent != '\0' && startAddress_DevName < this->DEV_NAME_ADDRESS_MAX)
+    {
+        deviceName_CharCurrent = EEPROM.read(startAddress_DevName);
+        if (deviceName_CharCurrent == '\0') break;
+        deviceName_BuffString += deviceName_CharCurrent;
+        startAddress_DevName++;
+    }
+
+    // Read deviceDescription
+    while (deviceDescr_CharCurrent != '\0' && startAddress_DevDescr < this->DEV_DESCR_ADDRESS_MAX)
+    {
+        deviceDescr_CharCurrent = EEPROM.read(startAddress_DevDescr);
+        if (deviceDescr_CharCurrent == '\0') break;
+        deviceDescript_BuffString += deviceDescr_CharCurrent;
+        startAddress_DevDescr++;
+    }
+
+    DeviceConfig devConfig;
+
+    Serial.println("Device Name " + deviceName_BuffString);
+    devConfig.deviceName = deviceName_BuffString;
+
+    Serial.println("Device Description " + deviceDescript_BuffString);
+    devConfig.deviceDescription = deviceDescript_BuffString;
+
+    EEPROM.end();
+    return devConfig;
 }

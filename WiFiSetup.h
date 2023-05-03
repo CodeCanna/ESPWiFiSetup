@@ -6,10 +6,10 @@ DOC STRING
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 
-struct NetworkConfig
+struct DeviceConfig
 {
-  String networkSSID;
-  String networkPASS;
+  String deviceName;
+  String deviceDescription;
 };
 
 class WiFiSetup
@@ -17,8 +17,11 @@ class WiFiSetup
     public:
         // If no port is given, we are in setup AP mode
         WiFiSetup(String ssidAP, String passAP, int port);
+        // Begins things :)
         void begin();
         int getPort();
+        bool saveDeviceConfig();
+        DeviceConfig readDeviceConfig();
         void handleClient();
         void handleConnect();
         void handleInfo();
@@ -28,14 +31,20 @@ class WiFiSetup
         void setNetworkConfig(String ssid, String pass);
         void softAPBegin();
         void setAppPage(String pageHTML);
-        NetworkConfig getNetworkConfig();
+        void setDeviceConfig(DeviceConfig config);
+        DeviceConfig getDeviceConfig();
         ESP8266WebServer server = {80};
         
     private:
         int _port;
+        const int DEV_NAME_ADDRESS_START = 50;
+        const int DEV_NAME_ADDRESS_MAX = 100;
+        const int DEV_DESCR_ADDRESS_START = 101;
+        const int DEV_DESCR_ADDRESS_MAX = 201;
+        
         String _ssidAP;
         String _passAP;
         String _appPage = "Insert your HTML here.";
-        NetworkConfig networkConfig;  
+        DeviceConfig deviceConfig;
 };
 #endif

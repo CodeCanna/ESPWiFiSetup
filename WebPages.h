@@ -131,6 +131,12 @@ String networkSetupPage = R"END(
     <h1>Select a WiFi Network</h1>
     <div id="container">
       <form action="/connect">
+        <h3>Device Info</h3>
+        <label for="device-name">Device Name:</label>
+        <input type="text" name="device-name"><br><br>
+        <label for="device-discr">Device Description:</label><br>
+        <textarea maxlength="100" rows="3" cols="40" name="device-descr" placeholder="Enter text"></textarea>
+        <h3>Network Setup</h3>
         <label for="names">Networks:</label>
         <select name="ssid" id="names">
           <option>
@@ -239,5 +245,64 @@ String badPassPage = R"END(
     </script>
   </body>
 </html>
+)END";
+
+String deviceInfoPage = R"END(
+<!DOCTYPE html>
+  <html>
+    <head>
+      <title>Device Info</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        html,
+        body {
+          margin: 0;
+          border: 0;
+          padding: 0;
+          background-color: teal;
+        }
+
+        h1,
+        h2 {
+          text-align: center;
+        }
+
+        div {
+          padding: 1rem 0rem 1rem 0rem;
+          margin: 0 3rem 0 3rem;
+          border-radius: 1rem;
+          background-color: lightgray;
+        }
+
+        h2 {
+          background-color: gray;
+          margin: 0;
+          padding: 1rem;
+        }
+
+        h2:nth-child(1) {
+          background-color: white;
+        }
+
+        h2:nth-child(3) {
+          background-color: white;
+        }
+
+        h2:nth-child(5) {
+          background-color: gray;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Device Info</h1>
+      <div id="menu-container">
+        <h2>Device Name: ^devicename^</h2>
+        <h2>Device Description: ^devicedescr^</h2>
+        <h2>Current WiFi Network: ^wifissid^</h2>
+        <h2>Network IP: ^networkip^</h2>
+        <h2>Device IP: ^deviceip^</h2>
+      </div>
+    </body>
+  </html>
 )END";
 #endif
