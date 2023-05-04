@@ -261,7 +261,7 @@ bool WiFiSetup::saveDeviceConfig()
     EEPROM.commit();
 
     // Write device name if not empty
-    if (! config.deviceName.empty())
+    if (! config.deviceName.isEmpty())
     {
         this->clearEEPROM(300);
         for (int i = 0; i < sizeof(deviceName_CharArray) / sizeof(deviceName_CharArray[0]); i++)
@@ -276,7 +276,7 @@ bool WiFiSetup::saveDeviceConfig()
     }
 
     // Write device description if not empty
-    if (! config.deviceDescription.empty())
+    if (! config.deviceDescription.isEmpty())
     {
         this->clearEEPROM(300);
         for (int i = 0; i < sizeof(deviceDescr_CharArray) / sizeof(deviceDescr_CharArray[i]); i++)
