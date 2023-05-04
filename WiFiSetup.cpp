@@ -65,14 +65,12 @@ void WiFiSetup::begin()
 
 void WiFiSetup::clearEEPROM(int size)
 {
-    EEPROM.begin(size);
-
     for (int i = 0; i < size; i++)
     {
         EEPROM.write(i, 0);
     }
 
-    EEPROM.end();
+    EEPROM.commit();
 }
 
 void WiFiSetup::softAPBegin()
@@ -189,8 +187,11 @@ void WiFiSetup::handleConnect()
 
                 DeviceConfig config;
 
-                config.deviceName = String(this->server.arg("device-name"));
-                config.deviceDescription = String(this->server.arg("device-descr"));
+                //config.deviceName = String(this->server.arg("device-name"));
+                //config.deviceDescription = String(this->server.arg("device-descr"));
+
+                this->server.arg("device-name") ? config.deviceName = String(this->server.arg("device-name")) : config.deviceName = "";
+                this->server.arg("device-descr") ? config.deviceDescription = String(this->server.arg("device-descr")) : config.deviceDescription = "";
 
                 this->setDeviceConfig(config);
                 this->saveDeviceConfig() ? Serial.println("Device Config Saved!") : Serial.println("Failed to Save Device Config...");
@@ -252,18 +253,10 @@ bool WiFiSetup::saveDeviceConfig()
 
     EEPROM.begin(300);
 
-    // Clear EEPROP
-    for (int i = 0; i < 300; i++)
-    {
-        EEPROM.write(i, 0);
-    }
-
-    EEPROM.commit();
-
     // Write device name if not empty
     if (! config.deviceName.isEmpty())
     {
-        this->clearEEPROM(300);
+        this->clearEEPROM(this->DEV_NAME_ADDRESS_MAX);
         for (int i = 0; i < sizeof(deviceName_CharArray) / sizeof(deviceName_CharArray[0]); i++)
         {
             delay(500);
@@ -278,7 +271,7 @@ bool WiFiSetup::saveDeviceConfig()
     // Write device description if not empty
     if (! config.deviceDescription.isEmpty())
     {
-        this->clearEEPROM(300);
+        this->clearEEPROM(this->DEV_DESCR_ADDRESS_MAX);
         for (int i = 0; i < sizeof(deviceDescr_CharArray) / sizeof(deviceDescr_CharArray[i]); i++)
         {
             EEPROM.write(startAddress_DevDescr, deviceDescr_CharArray[i]);
