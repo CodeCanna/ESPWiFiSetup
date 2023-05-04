@@ -32,6 +32,7 @@ class WiFiSetup
         void softAPBegin();
         void setAppPage(String pageHTML);
         void setDeviceConfig(DeviceConfig config);
+        void clearEEPROM(int size);
         DeviceConfig getDeviceConfig();
         ESP8266WebServer server = {80};
         

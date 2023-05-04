@@ -63,6 +63,18 @@ void WiFiSetup::begin()
     Serial.println(WiFi.status());
 }
 
+void WiFiSetup::clearEEPROM(int size)
+{
+    EEPROM.begin(size);
+
+    for (int i = 0; i < size; i++)
+    {
+        EEPROM.write(i, 0);
+    }
+
+    EEPROM.end();
+}
+
 void WiFiSetup::softAPBegin()
 {
     WiFi.mode(WIFI_AP);
@@ -248,28 +260,37 @@ bool WiFiSetup::saveDeviceConfig()
 
     EEPROM.commit();
 
-    // Write device name
-    for (int i = 0; i < sizeof(deviceName_CharArray) / sizeof(deviceName_CharArray[0]); i++)
+    // Write device name if not empty
+    if (! config.deviceName.empty())
     {
-        delay(500);
-        EEPROM.write(startAddress_DevName, deviceName_CharArray[i]);
-        Serial.print(deviceName_CharArray[i]);
-        Serial.print(" save at ");
-        Serial.println(startAddress_DevName);
-        startAddress_DevName++;
+        this->clearEEPROM(300);
+        for (int i = 0; i < sizeof(deviceName_CharArray) / sizeof(deviceName_CharArray[0]); i++)
+        {
+            delay(500);
+            EEPROM.write(startAddress_DevName, deviceName_CharArray[i]);
+            Serial.print(deviceName_CharArray[i]);
+            Serial.print(" save at ");
+            Serial.println(startAddress_DevName);
+            startAddress_DevName++;
+        }
     }
 
-    // Write device description
-    for (int i = 0; i < sizeof(deviceDescr_CharArray) / sizeof(deviceDescr_CharArray[i]); i++)
+    // Write device description if not empty
+    if (! config.deviceDescription.empty())
     {
-        EEPROM.write(startAddress_DevDescr, deviceDescr_CharArray[i]);
-        Serial.print(deviceDescr_CharArray[i]);
-        Serial.print(" save at ");
-        Serial.println(startAddress_DevDescr);
-        startAddress_DevDescr++;
+        this->clearEEPROM(300);
+        for (int i = 0; i < sizeof(deviceDescr_CharArray) / sizeof(deviceDescr_CharArray[i]); i++)
+        {
+            EEPROM.write(startAddress_DevDescr, deviceDescr_CharArray[i]);
+            Serial.print(deviceDescr_CharArray[i]);
+            Serial.print(" save at ");
+            Serial.println(startAddress_DevDescr);
+            startAddress_DevDescr++;
+        }
     }
+
     EEPROM.commit();
-    if (! EEPROM.end())
+    if (!EEPROM.end())
     {
         return false;
     }
@@ -296,7 +317,8 @@ DeviceConfig WiFiSetup::readDeviceConfig()
         Serial.print(deviceName_CharCurrent);
         Serial.print("read at");
         Serial.println(startAddress_DevName);
-        if (deviceName_CharCurrent == '\0') break;
+        if (deviceName_CharCurrent == '\0')
+            break;
         deviceName_BuffString += deviceName_CharCurrent;
         startAddress_DevName++;
     }
@@ -305,7 +327,8 @@ DeviceConfig WiFiSetup::readDeviceConfig()
     while (deviceDescr_CharCurrent != '\0' && startAddress_DevDescr < this->DEV_DESCR_ADDRESS_MAX)
     {
         deviceDescr_CharCurrent = EEPROM.read(startAddress_DevDescr);
-        if (deviceDescr_CharCurrent == '\0') break;
+        if (deviceDescr_CharCurrent == '\0')
+            break;
         deviceDescript_BuffString += deviceDescr_CharCurrent;
         startAddress_DevDescr++;
     }
