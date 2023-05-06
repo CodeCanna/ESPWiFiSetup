@@ -18,6 +18,8 @@ void WiFiSetup::begin()
 {
     server.on("/", std::bind(&WiFiSetup::showHomePage, this));
     server.begin();
+
+    // If no SSIDs are found stored immediatly boot into AP mode
     if (WiFi.SSID() == NULL)
     {
         this->softAPBegin();
@@ -26,6 +28,7 @@ void WiFiSetup::begin()
     }
     else
     {
+        // Start in station mode and attempt to connect with stored credentials
         WiFi.mode(WIFI_STA);
         WiFi.begin();
         while (WiFi.status() == WL_DISCONNECTED)
@@ -171,7 +174,6 @@ void WiFiSetup::handleConnect()
 {
     if (WiFi.SSID() != String(this->server.arg("ssid")) || WiFi.psk() != String(this->server.arg("pass")))
     {
-        WiFi.disconnect(true);
         Serial.println("SSID: " + String(this->server.arg("ssid")));
         Serial.println("PASS: " + String(this->server.arg("pass")));
         Serial.println("Device Name: " + String(this->server.arg("device-name")));
@@ -181,6 +183,7 @@ void WiFiSetup::handleConnect()
         while (WiFi.status() == WL_DISCONNECTED)
         {
             Serial.println("Connecting " + String(WiFi.status()));
+            delay(300);
             if (WiFi.status() == WL_CONNECTED)
             {
                 Serial.println("Connected!");
@@ -208,6 +211,7 @@ void WiFiSetup::handleConnect()
                 // Send wrong password page
                 badPassPage.replace("^networkname^", String(this->server.arg("ssid")));
                 this->server.send(200, "text/html", badPassPage);
+                Serial.println("Wrong pass....RIIIIIIIGHT????");
                 delay(3000);
                 break;
             }
