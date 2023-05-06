@@ -224,7 +224,7 @@ void WiFiSetup::handleConnect()
     }
     else
     {
-        this->server.send(200, "text/html", "Already connected to this network, no changes made.");
+        this->server.send(200, "text/html", "<h1>Already connected to this network, no changes made.</h1>");
         return;
     }
 }
@@ -253,7 +253,7 @@ bool WiFiSetup::saveDeviceConfig()
 
     Serial.println("Recieved Device Name: " + config.deviceName);
     Serial.println("Recieved Device Description: " + config.deviceDescription);
-    delay(5000);
+    delay(500);
 
     EEPROM.begin(300);
 
