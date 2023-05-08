@@ -17,9 +17,9 @@ WiFiSetup::WiFiSetup(String ssidAP, String passAP, int port) : server(port), _ss
 void WiFiSetup::begin()
 {
     server.on("/", std::bind(&WiFiSetup::showHomePage, this));
-    server.begin();
+    server.begin(this->_port);
 
-    // If no SSIDs are found stored immediatly boot into AP mode
+    // If no SSIDs are found stored, immediatly boot into AP mode
     if (WiFi.SSID() == NULL)
     {
         this->softAPBegin();
@@ -64,6 +64,15 @@ void WiFiSetup::begin()
     }
     Serial.println("WiFiSetup begin complete");
     Serial.println(WiFi.status());
+}
+
+bool WiFiSetup::isConnected()
+{
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        return false;
+    }
+    return true;
 }
 
 void WiFiSetup::clearEEPROM(int size)
@@ -161,7 +170,7 @@ void WiFiSetup::handleInfo()
     Serial.println("Show WiFi Info");
     Serial.println(config.deviceName);
     Serial.println(config.deviceDescription);
-    // Replace populate device info
+    // Replace populate device info page
     deviceInfoPage.replace("^devicename^", config.deviceName);
     deviceInfoPage.replace("^devicedescr^", config.deviceDescription);
     deviceInfoPage.replace("^wifissid^", WiFi.SSID());
@@ -172,7 +181,7 @@ void WiFiSetup::handleInfo()
 
 void WiFiSetup::handleConnect()
 {
-    if (WiFi.SSID() != String(this->server.arg("ssid")) || WiFi.psk() != String(this->server.arg("pass")))
+    if (WiFi.SSID() != String(this->server.arg("ssid")) || WiFi.psk() != String(this->server.arg("pass")) && this->isConnected())
     {
         Serial.println("SSID: " + String(this->server.arg("ssid")));
         Serial.println("PASS: " + String(this->server.arg("pass")));
@@ -201,8 +210,9 @@ void WiFiSetup::handleConnect()
 
                 // Send connection success page
                 successPage.replace("^networkname^", String(this->server.arg("ssid")));
+                successPage.replace("^deviceip^", WiFi.localIP().toString());
                 this->server.send(200, "text/html", successPage);
-                delay(3000);
+                delay(300);
                 ESP.restart();
                 break;
             }
@@ -212,7 +222,7 @@ void WiFiSetup::handleConnect()
                 badPassPage.replace("^networkname^", String(this->server.arg("ssid")));
                 this->server.send(200, "text/html", badPassPage);
                 Serial.println("Wrong pass....RIIIIIIIGHT????");
-                delay(3000);
+                delay(300);
                 break;
             }
             else if (WiFi.status() == WL_NO_SSID_AVAIL)

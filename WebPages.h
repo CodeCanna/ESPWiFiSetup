@@ -173,6 +173,7 @@ String successPage = R"END(
   <body>
     <h1>Success!<h1>
     <p>You have successfully logged into ^networkname^</p>
+    <p>You can access your device on your network through ^deviceip^</p>
   </body>
 </html>
 )END";
