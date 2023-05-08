@@ -21,6 +21,7 @@ class WiFiSetup
         void begin();
         int getPort();
         bool saveDeviceConfig();
+        bool isConnected();
         DeviceConfig readDeviceConfig();
         void handleClient();
         void handleConnect();
